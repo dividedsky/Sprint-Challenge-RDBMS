@@ -38,12 +38,18 @@ router.get('/:id', (req, res) => {
     .where({ id: req.params.id }).first();
 
   const actions = db('actions')
+    .select('id', 'description', 'notes', 'completed')
     .where({ project_id: req.params.id });
 
   Promise.all([project, actions])
     .then((output) => {
-      console.log(output);
-      const [project, actionsArr] = output;
+      let [project, actionsArr] = output;
+      console.log(actionsArr);
+      actionsArr = actionsArr.map(a => ({
+        ...a,
+        completed: a.completed !== 0,
+
+      }));
       res.status(200).json({
         id: project.id,
         name: project.name,
