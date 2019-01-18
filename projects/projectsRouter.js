@@ -1,5 +1,7 @@
 const express = require('express');
 const db = require('../config/dbConfig');
+const helpers = require('../data/helpers/actionsModel');
+
 
 const router = express.Router();
 
@@ -8,7 +10,7 @@ router.post('/', (req, res) => {
   if (!name) {
     res.status(400).json({ error: 'the project must have a name' });
   } else {
-    db('projects').insert(req.body)
+    helpers.addProject(req.body)
       .then((id) => {
         res.status(200).json(id);
       })
@@ -18,6 +20,15 @@ router.post('/', (req, res) => {
   }
 });
 
+router.get('/', (req, res) => {
+  helpers.getProjects()
+    .then((list) => {
+      res.status(200).json(list);
+    })
+    .catch((err) => {
+      res.status(500).json({ error: `there was an error retrieving the projects: ${err}` });
+    });
+});
 router.get('/:id', (req, res) => {
   /*
    *db('projects as p')
@@ -34,17 +45,18 @@ router.get('/:id', (req, res) => {
    *    res.status(500).json({ error: `there was an error retrieving the project: ${err}` });
    *  });
    */
-  const project = db('projects')
-    .where({ id: req.params.id }).first();
+  const project = helpers.getProject(req.params.id);
 
-  const actions = db('actions')
-    .select('id', 'description', 'notes', 'completed')
-    .where({ project_id: req.params.id });
+  // const actions = db('actions')
+  // .select('id', 'description', 'notes', 'completed')
+  // .where({ project_id: req.params.id });
+  const actions = helpers.getProjectActions(req.params.id);
+
 
   Promise.all([project, actions])
     .then((output) => {
       let [project, actionsArr] = output;
-      console.log(actionsArr);
+      actionsArr.forEach(a => delete a.project_id);
       actionsArr = actionsArr.map(a => ({
         ...a,
         completed: a.completed !== 0,
