@@ -4,7 +4,7 @@ const db = require('../config/dbConfig');
 const router = express.Router();
 
 router.post('/', (req, res) => {
-  const { name, description, completed } = req.body;
+  const { name } = req.body;
   if (!name) {
     res.status(400).json({ error: 'the project must have a name' });
   } else {
